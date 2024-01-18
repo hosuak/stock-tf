@@ -1,7 +1,20 @@
-# .gitignore 파일 내용
+
+# Ignore Terraform files
 .terraform/
 terraform.tfstate
 terraform.tfstate.backup
-*.tfvars
-*.tfstate*
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**.tfplan
+**.tfstate
+**.tfstate.backup
+**.tfvars
+**.tfstate*
 crash.log
+
+# Ignore Terraform CLI configuration file
+**.terraform.rc
+
+# Ignore Terraform v0.14 and later lock file
+**.terraform.lock.hcl
