@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" # 버전은 ~> 관계연산자 사용 
+      version = "~> 5.0" # 버전은 ~> 관계연산자 사용
     }
   }
 }
