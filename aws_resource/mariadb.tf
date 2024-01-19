@@ -73,22 +73,75 @@ resource "aws_security_group" "mariaDB-sg" {
     Name = "${var.name}-mariaDB-sg"
   }
 }
-data "local_file" "mariadb_setup" {
-  filename = "../aws_resource/mariadb_primary.sh" # apply 디렉토리 기준에서 잡아줘야한다.
-}
+# data "local_file" "mariadb_setup" {
+#   filename = "../aws_resource/mariadb_primary.sh" # apply 디렉토리 기준에서 잡아줘야한다.
+# }
 
 resource "aws_instance" "mariaDB" {
-  count                  = local.create_mariadb ? !var.single_mariaDB ? 2 : 1 : 0
+  count                  = local.create_mariadb ? var.single_mariaDB ? 1 : 2 : 0
   ami                    = var.mariaDB_ami
   instance_type          = var.instance_type
   key_name               = var.key_name
   subnet_id              = element(aws_subnet.db-private[*].id, count.index % length(aws_subnet.db-private))
   vpc_security_group_ids = [aws_security_group.mariaDB-sg.id]
-  user_data_base64       = base64encode(data.local_file.mariadb_setup.content)
+  user_data = base64encode(<<-EOF
+              #!/bin/bash
+              apt update
+              apt upgrade -y
+              apt install -y mariadb-server-10.6
+              
+      
+              cat <<EOL > /etc/mysql/my.cnf
+[client-server]
+port = 3306
+socket = /run/mysqld/mysqld.sock
+!includedir /etc/mysql/conf.d/
+!includedir /etc/mysql/mariadb.conf.d/
+
+[client]
+character-sets-dir = utf8
+
+[mysqld]
+init_connect=SET collation_connection = utf8_general_ci
+init_connect=SET NAMES utf8
+character-set-server = utf8
+collation-server = utf8_general_ci
+general_log = 1
+general_log_file = /var/log/mariadb/general.log
+log_error = /var/log/mariadb/error.log
+max_connections = 300
+
+[mysqldump]
+default-character-set = utf8
+
+[mysql]
+default-character-set = utf8
+EOL
+              
+              
+              systemctl daemon-reload
+              systemctl restart mariadb.service
+              
+              
+              systemctl enable mariadb
+              
+              mysql -u root <<-EOSQL
+                ALTER USER 'root'@'localhost' IDENTIFIED BY '${var.root_password}';
+                DELETE FROM mysql.user WHERE User='';
+                DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+                DROP DATABASE IF EXISTS test;
+                DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%';
+                FLUSH PRIVILEGES;
+                CREATE DATABASE ${var.dataBase_name};
+                CREATE USER '${var.db_username}'@'%' IDENTIFIED BY '${var.db_password}';
+                GRANT ALL PRIVILEGES ON *.* TO '${var.db_username}'@'%' WITH GRANT OPTION;
+              EOSQL
+              EOF
+  )
   tags = {
     Name = try(
       var.private_subnet_names[count.index],
-      format("${var.name}-db-private-subnet-%s", element(var.db_name, count.index))
+      format("${var.name}-db-private-%s", element(var.db_name, count.index))
     )
   }
 }
