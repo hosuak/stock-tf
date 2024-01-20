@@ -38,6 +38,14 @@ resource "aws_vpc" "this" {
     var.vpc_tags,
   )
 }
+resource "aws_vpc_ipv4_cidr_block_association" "this" {
+  count = local.create_vpc && length(var.secondary_cidr_blocks) > 0 ? length(var.secondary_cidr_blocks) : 0
+
+  # Do not turn this into `local.vpc_id`
+  vpc_id = aws_vpc.this[0].id
+
+  cidr_block = element(var.secondary_cidr_blocks, count.index)
+}
 ################################################################################
 # DHCP Options Set
 ################################################################################
@@ -118,7 +126,7 @@ resource "aws_route_table" "public" {
   vpc_id = local.vpc_id
 
   tags = merge(
-    { "Name" = "${var.name}-${var.public_subnet_suffix}" },
+    { "Name" = "${var.name}-${var.public_subnet_suffix}-rt" },
     var.tags,
     var.public_route_table_tags,
   )
@@ -213,7 +221,7 @@ resource "aws_route_table" "private" {
 
   tags = merge(
     {
-      "Name" = var.single_nat_gateway || var.single_nat_instance ? "${var.name}-${var.private_subnet_suffix}" : format(
+      "Name" = var.single_nat_gateway || var.single_nat_instance ? "${var.name}-${var.private_subnet_suffix}-rt" : format(
         "${var.name}-${var.private_subnet_suffix}-%s",
         element(var.azs, count.index),
       )

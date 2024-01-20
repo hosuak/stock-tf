@@ -1,4 +1,12 @@
 ################################################################################
+# VPC
+################################################################################
+
+output "vpc_id" {
+  value = aws_vpc.this[0].id
+}
+
+################################################################################
 # Publiс Subnets
 ################################################################################
 output "public_subnets" {
@@ -19,4 +27,21 @@ output "private_subnets" {
 output "private_subnets_cidr_blocks" {
   description = "List of cidr_blocks of private subnets"
   value       = compact(aws_subnet.private[*].cidr_block)
+}
+
+################################################################################
+# VPC
+################################################################################
+output "vpc_cidr_block" {
+  description = "The CIDR block of the VPC"
+  value       = try(aws_vpc.this[0].cidr_block, null)
+}
+################################################################################
+# Nat_instance
+################################################################################
+output "nat_bastion" {
+  description = "nat_bastion is Nat_instance include Bastion Host"
+   value = {
+    public_ip = aws_instance.nat_instance[*].public_ip
+  }
 }

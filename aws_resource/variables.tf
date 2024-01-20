@@ -119,7 +119,11 @@ variable "cidr" {
   type        = string
   default     = "10.0.0.0/16"
 }
-
+variable "secondary_cidr_blocks" {
+  description = "List of secondary CIDR blocks to associate with the VPC to extend the IP Address pool"
+  type        = list(string)
+  default     = []
+}
 variable "instance_tenancy" {
   description = "A tenancy option for instances launched into the VPC"
   type        = string
@@ -347,72 +351,3 @@ variable "key_name" {
   default     = "ec2-boot-key"
 }
 
-################################################################################
-# MariaDB
-################################################################################
-
-variable "create_mariadb" {
-  description = "Controls if MariaDB should be created (it affects almost all resources)"
-  type        = bool
-  default     = false
-}
-
-variable "mariaDB_ami" {
-  description = "AMI ID for MariaDB instances"
-  type        = string
-  default     = "ami-0f3a440bbcff3d043"
-}
-
-variable "instance_type" {
-  description = "Instance type for MariaDB instances"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "single_mariaDB" {
-  description = "Controls if a single MariaDB instance should be created"
-  type        = bool
-  default     = false
-}
-
-
-
-variable "db_name" {
-  description = "List of database names"
-  type        = list(string)
-  default     = ["primary", "secondary"]
-}
-
-variable "ssh_enabled" {
-  description = "Controls if SSH access should be enabled"
-  type        = bool
-  default     = false
-}
-
-variable "root_password" {
-  description = "Root password for MariaDB"
-  type        = string
-  default     = "rootpass"
-}
-
-variable "dataBase_name" {
-  description = "Database username"
-  type        = string
-  default     = "demo"
-}
-variable "db_username" {
-  description = "Database username"
-  type        = string
-  default     = "admin"
-}
-
-variable "db_password" {
-  description = "Database user password"
-  type        = string
-  default     = "mariapass"
-}
-
-variable "db_private_subnets" {
-  type    = list(string)
-  default = ["10.0.210.0/24", "10.0.220.0/24"]
-}

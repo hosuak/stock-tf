@@ -13,7 +13,7 @@ terraform.tfstate.backup
 **.tfstate*
 crash.log
 
-env/
+
 
 # Ignore Terraform CLI configuration file
 **.terraform.rc

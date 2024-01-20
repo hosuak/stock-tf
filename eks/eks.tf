@@ -1,3 +1,0 @@
-locals {
-  create = var.create 
-}
