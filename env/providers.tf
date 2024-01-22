@@ -8,7 +8,7 @@ terraform {
 }
 provider "aws" {
   region  = "ap-northeast-2"
-  profile = var.profile_name
+  profile = "${var.profile_name}"
 }
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
@@ -16,6 +16,6 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--profile", var.profile_name]
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--profile", "${var.profile_name}"]
   }
 }
