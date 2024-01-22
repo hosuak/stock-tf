@@ -5,12 +5,12 @@
 module "vpc" {
 
   # ------------------------------------------------------------------------------------------------------------------------------ 기본 VPC 설정
-  source = "../aws_resource"
-  name   = "stock"
-  # cidr            = "172.16.0.0/16"                        # default = "10.0.0.0/16"
-  # azs             = ["ap-northeast-2a", "ap-northeast-2c"] # default =  ["ap-northeast-2a", "ap-northeast-2c"]
-  # private_subnets = ["172.16.1.0/24", "172.16.3.0/24"]     # default = ["10.0.10.0/24", "10.0.20.0/24"]
-  # public_subnets  = ["172.16.101.0/24", "172.16.103.0/24"] # default = ["10.0.110.0/24", "10.0.120.0/24"]
+  source          = "../aws_resource"
+  name            = "stock"
+  cidr            = "172.16.0.0/16"                        # default = "10.0.0.0/16"
+  azs             = ["ap-northeast-2a", "ap-northeast-2c"] # default =  ["ap-northeast-2a", "ap-northeast-2c"]
+  private_subnets = ["172.16.1.0/24", "172.16.3.0/24"]     # default = ["10.0.10.0/24", "10.0.20.0/24"]
+  public_subnets  = ["172.16.101.0/24", "172.16.103.0/24"] # default = ["10.0.110.0/24", "10.0.120.0/24"]
 
   # ------------------------------------------------------------------------------------------------------------------------------ NAT 설정 
   # ※ "0.0.0.0/0"으로 향하는 라우트가 이미 라우팅 테이블에 존재하면 생성 충돌이 나기 때문에 -> Nat Instance 와 Nat Gateway는 같이 사용이 불가능하다.
@@ -48,10 +48,10 @@ module "eks" {
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
     initial = {
-      instance_types = ["t3.small"]
-      min_size       = 2
-      max_size       = 3
-      desired_size   = 2
+      instance_types         = ["t3.small"]
+      min_size               = 2
+      max_size               = 3
+      desired_size           = 2
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
     }
   }
@@ -64,17 +64,18 @@ module "eks" {
   manage_aws_auth_configmap = true
   aws_auth_users = [
     {
-      userarn  = "arn:aws:iam::${data.aws_iam_user.EKS_Admin_ID.id}:user/admin"
-      username = var.EKS_Admin_ID
+      userarn  = "${data.aws_iam_user.EKS_Admin_ID.arn}"
+      username = "${data.aws_iam_user.EKS_Admin_ID.user_name}"
       groups   = ["system:masters"]
     },
   ]
 }
 data "aws_iam_user" "EKS_Admin_ID" {
-  user_name = var.EKS_Admin_ID  # EKS_Admin_ID = 입력값으로 생성
+  user_name = var.EKS_Admin_ID # EKS_Admin_ID = 입력값으로 생성
 }
+
 data "aws_key_pair" "ec2-key" {
-  key_name = var.key_name  # default = ec2-boot-key
+  key_name = var.key_name # default = ec2-boot-key
 }
 module "add_cluster_sg" {
   source      = "terraform-aws-modules/security-group/aws"
@@ -152,11 +153,7 @@ resource "aws_ec2_tag" "public_subnet_tag2" {
   value       = "1"
 }
 
-output "bastion_ip" {
-  description = "bastion-nat public IP"
-  value       = module.vpc.nat_bastion.public_ip
-  
-}
+
 
 
 module "mariaDB" {
@@ -165,12 +162,14 @@ module "mariaDB" {
   vpc_id = module.vpc.vpc_id # default = module.vpc.vpc_id
   # ------------------------------------------------------------------------------------------------------------------------------ 마리아DB 설정
   # Maria DB 여는 설정
-  single_mariaDB = false # default = false
-  create_mariadb_subnet = false  # deafault = false 
-  ssh_enabled    = false # db_ssh 보안그룹을 여는 옵션 default = false
+  single_mariaDB          = false # default = false
+  create_mariadb_subnet   = false # deafault = false 
+  ssh_enabled             = false # db_ssh 보안그룹을 여는 옵션 default = false
   create_mariadb_instance = false # default = false 
   # db_private_subnets = ["172.16.201.0/24", "172.16.202.0/24"] # default = ["10.0.210.0/24", "10.0.220.0/24"]
   # dataBase_name = "demo"      # default = demo
   # db_username   = "admin"     # default = admin
   # db_password   = "mariapass" # default = mariapass
 }
+
+
