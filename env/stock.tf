@@ -49,10 +49,10 @@ module "eks" {
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
     "${var.initial}worker" = {
-      instance_types         = ["t3.medium"]
-      min_size               = 3
-      max_size               = 3
-      desired_size           = 3
+      instance_types         = ["t3.small"]
+      min_size               = 2
+      max_size               = 4
+      desired_size           = 2
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
       iam_role_additional_policies = {
         AmazonS3FullAccess           = "arn:aws:iam::aws:policy/AmazonS3FullAccess",
@@ -172,6 +172,7 @@ resource "kubernetes_namespace" "namespace" {
   metadata {
     name = var.namespace
   }
+  depends_on = [module.eks.eks_managed_node_groups]
 }
 
 module "sa_role_policy_ebs" {
@@ -180,10 +181,10 @@ module "sa_role_policy_ebs" {
   policy_name = "AmazonEBSCSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_EBS_CSI_DriverRole"
   namespace   = var.namespace
-  sa_name     = "aws-mountpoint-s3-csi-driverte"
+  sa_name     = "ebs-csi-controller-sa"
 
   cluster_oidc_issuer_url = local.oidc_url
-
+  depends_on              = [resource.kubernetes_namespace.namespace]
 }
 module "sa_role_policy_s3" {
   source = "../serviceAccount"
@@ -191,10 +192,10 @@ module "sa_role_policy_s3" {
   policy_name = "AmazonS3CSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_S3_CSI_DriverRole"
   namespace   = var.namespace
-  sa_name     = "ebs-csi-controller-sa"
+  sa_name     = "aws-mountpoint-s3-csi-sa"
 
   cluster_oidc_issuer_url = local.oidc_url
-
+  depends_on              = [resource.kubernetes_namespace.namespace]
 }
 module "sa_role_policy_external-dns" {
   source = "../serviceAccount"
@@ -205,7 +206,7 @@ module "sa_role_policy_external-dns" {
   sa_name     = "external-dns"
 
   cluster_oidc_issuer_url = local.oidc_url
-
+  depends_on              = [resource.kubernetes_namespace.namespace]
 }
 module "sa_role_policy_lb" {
   source = "../serviceAccount"
@@ -216,7 +217,7 @@ module "sa_role_policy_lb" {
   sa_name     = "aws-load-balancer-controller"
 
   cluster_oidc_issuer_url = local.oidc_url
-
+  depends_on              = [resource.kubernetes_namespace.namespace]
 }
 
 

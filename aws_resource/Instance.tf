@@ -20,7 +20,7 @@ resource "aws_instance" "nat_instance" {
   key_name = count.index == 0 ? var.key_name : null
 
   tags = {
-    Name = count.index == 0 ? "dh-nat_bastion" : "dh-nat_instance-${count.index}"
+    Name = count.index == 0 ? "nat_bastion" : "nat_instance-${count.index}"
   }
 }
 
@@ -47,17 +47,18 @@ resource "aws_security_group" "nat_instance_sg" {
 
   tags = {
     Name = "nat_instance_sg"
-    # 추가적인 태그들을 여기에 추가할 수 있습니다.
+   
   }
 }
 locals {
   create_bastion = var.enable_nat_gateway ? 1 : 0
 }
 resource "aws_instance" "bastion" {
+  count = local.create_bastion
   ami                         = var.nat_ami
   instance_type               = var.nat_intance_type
   associate_public_ip_address = true
-  subnet_id = var.single_nat_gateway ? var.public_subnets[1] : var.public_subnets[0]
+  subnet_id =  var.single_nat_gateway ? var.public_subnets[1] : var.public_subnets[0]
 
   vpc_security_group_ids = [aws_security_group.nat_instance_sg[0].id]
 
