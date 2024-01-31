@@ -8,11 +8,7 @@ locals {
   oidc_issuer_url    = var.cluster_oidc_issuer_url
   role_name          = var.role_name != "" ? var.role_name : var.sa_name
 }
-resource "kubernetes_namespace" "namespace" {
-  metadata {
-    name = var.namespace
-  }
-}
+
 
 data "aws_iam_policy_document" "service_account_assume_role" {
   statement {

@@ -19,3 +19,10 @@ variable "initial" {
   type        = string
   default     = "dh-"
 }
+
+variable "namespace" {
+  type    = string
+  default = "stock-city"
+}
+
+

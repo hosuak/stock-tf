@@ -19,9 +19,10 @@ module "vpc" {
   # -> terraform state rm 'module.vpc.aws_route_table.private' -> true,false 설정후->  terraform apply
   # 
 
-  # Nat GateWay 설정
+  # Nat GateWay 설정  - enable_nat_gateway 일경우 bastion-instance가 생기게 된다.
   enable_nat_gateway = false # NAT GATWAY 생성시 default = false 이다.
   single_nat_gateway = true  # default = false 
+
 
   # Nat Instance 설정(Amazon Linux)
   enable_nat_instance = true # NAT INSTANCE 생성시 default = false 이다.
@@ -47,8 +48,8 @@ module "eks" {
 
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
-    dh-worker = {
-      instance_types         = ["t3.small"]
+    "${var.initial}worker" = {
+      instance_types         = ["t3.medium"]
       min_size               = 3
       max_size               = 3
       desired_size           = 3
@@ -160,59 +161,62 @@ resource "aws_ec2_tag" "public_subnet_tag2" {
   key         = "kubernetes.io/role/elb"
   value       = "1"
 }
-
-#-----------------------------------------------------------------------------------------------
+##########################################################################
+# kubernetes-serviceAccount-Role-Policy
+##########################################################################
 locals {
   oidc_url = try(module.eks.oidc_provider_arn, null)
 
 }
+resource "kubernetes_namespace" "namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
 module "sa_role_policy_ebs" {
   source = "../serviceAccount"
 
   policy_name = "AmazonEBSCSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_EBS_CSI_DriverRole"
-  namespace   = "kube-system"
-  sa_name     = "ebs-csi-driver-controller"
+  namespace   = var.namespace
+  sa_name     = "aws-mountpoint-s3-csi-driverte"
 
   cluster_oidc_issuer_url = local.oidc_url
 
-  depends_on = [module.eks]
 }
 module "sa_role_policy_s3" {
   source = "../serviceAccount"
 
   policy_name = "AmazonS3CSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_S3_CSI_DriverRole"
-  namespace   = "stock-city"
+  namespace   = var.namespace
   sa_name     = "ebs-csi-controller-sa"
 
   cluster_oidc_issuer_url = local.oidc_url
 
-  depends_on = [module.eks]
 }
 module "sa_role_policy_external-dns" {
   source = "../serviceAccount"
 
   policy_name = "ExternalDNSIAMPolicy"
   role_name   = "${var.initial}AmazonEKSExternalDNSRole"
-  namespace   = "stock-city"
+  namespace   = var.namespace
   sa_name     = "external-dns"
 
   cluster_oidc_issuer_url = local.oidc_url
 
-  depends_on = [module.eks]
 }
 module "sa_role_policy_lb" {
   source = "../serviceAccount"
 
   policy_name = "AWSLoadBalancerControllerIAMPolicy"
   role_name   = "${var.initial}AmazonEKSLoadBalancerControllerRole"
-  namespace   = "stock-city"
+  namespace   = var.namespace
   sa_name     = "aws-load-balancer-controller"
 
   cluster_oidc_issuer_url = local.oidc_url
 
-  depends_on = [module.eks]
 }
 
 
@@ -234,22 +238,20 @@ module "sa_role_policy_lb" {
 
 
 
-
-
-module "mariaDB" {
-  source = "../mariaDB-instance"
-  name   = "stock"
-  vpc_id = module.vpc.vpc_id # default = module.vpc.vpc_id
-  # ------------------------------------------------------------------------------------------------------------------------------ 마리아DB 설정
-  # Maria DB 여는 설정
-  single_mariaDB          = false # default = false
-  create_mariadb_subnet   = false # deafault = false 
-  ssh_enabled             = false # db_ssh 보안그룹을 여는 옵션 default = false
-  create_mariadb_instance = false # default = false 
-  # db_private_subnets = ["172.16.201.0/24", "172.16.202.0/24"] # default = ["10.0.210.0/24", "10.0.220.0/24"]
-  # dataBase_name = "demo"      # default = demo
-  # db_username   = "admin"     # default = admin
-  # db_password   = "mariapass" # default = mariapass
-}
+# module "mariaDB" {
+#   source = "../mariaDB-instance"
+#   name   = "stock"
+#   vpc_id = module.vpc.vpc_id # default = module.vpc.vpc_id
+#   # ------------------------------------------------------------------------------------------------------------------------------ 마리아DB 설정
+#   # Maria DB 여는 설정
+#   single_mariaDB          = false # default = false
+#   create_mariadb_subnet   = false # deafault = false 
+#   ssh_enabled             = false # db_ssh 보안그룹을 여는 옵션 default = false
+#   create_mariadb_instance = false # default = false 
+#   # db_private_subnets = ["172.16.201.0/24", "172.16.202.0/24"] # default = ["10.0.210.0/24", "10.0.220.0/24"]
+#   # dataBase_name = "demo"      # default = demo
+#   # db_username   = "admin"     # default = admin
+#   # db_password   = "mariapass" # default = mariapass
+# }
 
 

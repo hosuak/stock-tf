@@ -330,24 +330,28 @@ variable "nat_intance_type" {
   default     = "t2.micro"
 }
 
-variable "bastion_instance_type" {
-  description = "Instance type for Bastion instances"
-  type        = string
-  default     = "t2.micro"
-}
 variable "nat_ami" {
   description = "AMI ID for NAT instances"
   type        = string
   default     = "ami-01ad0c7a4930f0e43"
 }
-variable "bastion_ami" {
-  description = "AMI ID for Bastion instances"
-  type        = string
-  default     = "ami-01ad0c7a4930f0e43"
-}
+
 variable "key_name" {
   description = "Name of the EC2 key pair to associate with instances. Set to null if you don't want to associate a key pair."
   type        = string
   default     = "ec2-boot-key"
 }
 
+################################################################################
+# Bastion Instance
+################################################################################
+variable "bastion_ami" {
+  description = "AMI ID for Bastion instances"
+  type        = string
+  default     = "ami-0bc4327f3aabf5b71"
+}
+variable "bastion_instance_type" {
+  description = "Instance type for Bastion instances"
+  type        = string
+  default     = "t2.micro"
+}

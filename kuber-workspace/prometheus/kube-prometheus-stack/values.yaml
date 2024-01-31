@@ -1218,7 +1218,7 @@ kubeApiServer:
 ##
 kubelet:
   enabled: true
-  namespace: kube-system
+  namespace: stock-city
 
   serviceMonitor:
     ## Attach metadata to discovered targets. Requires Prometheus v2.45 for endpoints created by the operator.
@@ -2499,7 +2499,7 @@ prometheusOperator:
   ##
   kubeletService:
     enabled: true
-    namespace: kube-system
+    namespace: stock-city
     ## Use '{{ template "kube-prometheus-stack.fullname" . }}-kubelet' by default
     name: ""
 
