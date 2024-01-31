@@ -53,6 +53,11 @@ module "eks" {
       max_size               = 3
       desired_size           = 3
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
+      iam_role_additional_policies = {
+        AmazonS3FullAccess           = "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+        AmazonEKS_EFS_CSI_DriverRole = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+        AmazonEBSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
     }
   }
 
@@ -166,7 +171,7 @@ module "sa_role_policy_ebs" {
 
   policy_name = "AmazonEBSCSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_EBS_CSI_DriverRole"
-  namespace   = "stock-city"
+  namespace   = "kube-system"
   sa_name     = "ebs-csi-driver-controller"
 
   cluster_oidc_issuer_url = local.oidc_url
@@ -179,7 +184,7 @@ module "sa_role_policy_s3" {
   policy_name = "AmazonS3CSIDriverPolicy"
   role_name   = "${var.initial}AmazonEKS_S3_CSI_DriverRole"
   namespace   = "stock-city"
-  sa_name     = "s3-csi-driver-controller"
+  sa_name     = "ebs-csi-controller-sa"
 
   cluster_oidc_issuer_url = local.oidc_url
 
