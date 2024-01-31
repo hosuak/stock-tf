@@ -20,11 +20,12 @@ spec:
     - host: www.itbank08.link
       http:
         paths:
-          - pathType: Prefix
-            path: /
+          - path: /
+            pathType: Prefix
             backend:
               service:
                 name: web-svc
                 port:
                   number: 80
+
 
