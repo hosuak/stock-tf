@@ -1,5 +1,3 @@
-
-
 variable "role_name" {
   type        = string
   default     = ""
@@ -14,6 +12,7 @@ variable "role_tags" {
 
 variable "cluster_oidc_issuer_url" {
   type        = string
+  default     = "default"
   description = "The Cluster OIDC Issuer URL (for example, per the cluster_oidc_issuer_url output on the official EKS terraform module at https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest?tab=outputs)"
 }
 variable "namespace" {
@@ -22,11 +21,12 @@ variable "namespace" {
   description = "The namespace in Kubernetes under which to create the service account"
 }
 
-variable "name" {
+variable "sa_name" {
   type        = string
+  default     = "default"
   description = "The name of the created service account in Kubernetes"
 }
-variable "policy_json" {
+variable "policy_name" {
   type        = string
   default     = ""
   description = "If provided, create and attach a policy to the role"
@@ -39,7 +39,7 @@ variable "automount_service_account_token" {
   description = "Whether to set automountServiceAccountToken on the created service account in Kubernetes"
 }
 variable "policy_arns" {
-  type = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "A list of ARNs of policies to attach to the role"
 }

@@ -6,11 +6,11 @@ module "vpc" {
 
   # ------------------------------------------------------------------------------------------------------------------------------ 기본 VPC 설정
   source          = "../aws_resource"
-  name            = "stock"
-  cidr            = "172.16.0.0/16"                        # default = "10.0.0.0/16"
-  azs             = ["ap-northeast-2a", "ap-northeast-2c"] # default =  ["ap-northeast-2a", "ap-northeast-2c"]
-  private_subnets = ["172.16.1.0/24", "172.16.3.0/24"]     # default = ["10.0.10.0/24", "10.0.20.0/24"]
-  public_subnets  = ["172.16.101.0/24", "172.16.103.0/24"] # default = ["10.0.110.0/24", "10.0.120.0/24"]
+  name            = "${var.initial}stock-vpc"
+  cidr            = "192.168.0.0/16"                         # default = "10.0.0.0/16"
+  azs             = ["ap-northeast-2a", "ap-northeast-2c"]   # default =  ["ap-northeast-2a", "ap-northeast-2c"]
+  private_subnets = ["192.168.1.0/24", "192.168.3.0/24"]     # default = ["10.0.10.0/24", "10.0.20.0/24"]
+  public_subnets  = ["192.168.101.0/24", "192.168.103.0/24"] # default = ["10.0.110.0/24", "10.0.120.0/24"]
 
   # ------------------------------------------------------------------------------------------------------------------------------ NAT 설정 
   # ※ "0.0.0.0/0"으로 향하는 라우트가 이미 라우팅 테이블에 존재하면 생성 충돌이 나기 때문에 -> Nat Instance 와 Nat Gateway는 같이 사용이 불가능하다.
@@ -37,7 +37,7 @@ module "eks" {
   version = "~> 19.0"
 
   # EKS Cluster Setting
-  cluster_name    = "stock-eks"
+  cluster_name    = "${var.initial}eks"
   cluster_version = "1.28"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
@@ -47,11 +47,11 @@ module "eks" {
 
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
-    initial = {
+    dh-worker = {
       instance_types         = ["t3.small"]
-      min_size               = 2
+      min_size               = 3
       max_size               = 3
-      desired_size           = 2
+      desired_size           = 3
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
     }
   }
@@ -77,6 +77,9 @@ data "aws_iam_user" "EKS_Admin_ID" {
 data "aws_key_pair" "ec2-key" {
   key_name = var.key_name # default = ec2-boot-key
 }
+
+
+#-----------------------------------------------------------------------------------------------
 module "add_cluster_sg" {
   source      = "terraform-aws-modules/security-group/aws"
   version     = "~> 5.0"
@@ -152,6 +155,78 @@ resource "aws_ec2_tag" "public_subnet_tag2" {
   key         = "kubernetes.io/role/elb"
   value       = "1"
 }
+
+#-----------------------------------------------------------------------------------------------
+locals {
+  oidc_url = try(module.eks.oidc_provider_arn, null)
+
+}
+module "sa_role_policy_ebs" {
+  source = "../serviceAccount"
+
+  policy_name = "AmazonEBSCSIDriverPolicy"
+  role_name   = "${var.initial}AmazonEKS_EBS_CSI_DriverRole"
+  namespace   = "stock-city"
+  sa_name     = "ebs-csi-driver-controller"
+
+  cluster_oidc_issuer_url = local.oidc_url
+
+  depends_on = [module.eks]
+}
+module "sa_role_policy_s3" {
+  source = "../serviceAccount"
+
+  policy_name = "AmazonS3CSIDriverPolicy"
+  role_name   = "${var.initial}AmazonEKS_S3_CSI_DriverRole"
+  namespace   = "stock-city"
+  sa_name     = "s3-csi-driver-controller"
+
+  cluster_oidc_issuer_url = local.oidc_url
+
+  depends_on = [module.eks]
+}
+module "sa_role_policy_external-dns" {
+  source = "../serviceAccount"
+
+  policy_name = "ExternalDNSIAMPolicy"
+  role_name   = "${var.initial}AmazonEKSExternalDNSRole"
+  namespace   = "stock-city"
+  sa_name     = "external-dns"
+
+  cluster_oidc_issuer_url = local.oidc_url
+
+  depends_on = [module.eks]
+}
+module "sa_role_policy_lb" {
+  source = "../serviceAccount"
+
+  policy_name = "AWSLoadBalancerControllerIAMPolicy"
+  role_name   = "${var.initial}AmazonEKSLoadBalancerControllerRole"
+  namespace   = "stock-city"
+  sa_name     = "aws-load-balancer-controller"
+
+  cluster_oidc_issuer_url = local.oidc_url
+
+  depends_on = [module.eks]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

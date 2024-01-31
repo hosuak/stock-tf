@@ -8,7 +8,7 @@ terraform {
 }
 provider "aws" {
   region  = "ap-northeast-2"
-  profile = "${var.profile_name}"
+  profile = var.profile_name
 }
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
