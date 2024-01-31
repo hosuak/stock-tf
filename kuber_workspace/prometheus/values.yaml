@@ -1,0 +1,26 @@
+grafana:
+  enabled: true
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    replicas: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    retention: 15d
+    retentionSize: 20GiB
+    scrapeInterval: 15s
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 30Gi
+          storageClassName: gp2
