@@ -21,6 +21,8 @@ spec:
       labels:
         app: web-app
     spec:
+      securityContext:
+        runAsUser: 1000
       containers:
       - name: web-app
         image: 477159410287.dkr.ecr.ap-northeast-2.amazonaws.com/itbank08:dh-test
@@ -34,6 +36,6 @@ spec:
         - name: persistent-storage
           mountPath: /mountPoint
       volumes:
-        - name: persistent-storage
-          persistentVolumeClaim:
-            claimName: s3-claim
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: s3-claim

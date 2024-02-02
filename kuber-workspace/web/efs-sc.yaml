@@ -1,0 +1,37 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: efs-ap
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-08ef8644280157634
+  directoryPerms: "700"
+  gidRangeStart: "1000"
+  gidRangeEnd: "2000"
+  basePath: "/prometheus"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: efs-csi-node-role
+  namespace: stock-city
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: efs-csi-node-role-binding
+  namespace: stock-city
+subjects:
+- kind: ServiceAccount
+  name: efs-csi-node-sa
+  namespace: stock-city
+roleRef:
+  kind: Role
+  name: efs-csi-node-role
+  apiGroup: rbac.authorization.k8s.io
+

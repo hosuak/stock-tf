@@ -56,8 +56,7 @@ module "eks" {
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
       iam_role_additional_policies = {
         AmazonS3FullAccess           = "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-        AmazonEKS_EFS_CSI_DriverRole = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-        AmazonEBSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        # AmazonEBSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
     }
   }

@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: s3-pv
+  namespace: stock-city
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  mountOptions:
+    - allow-delete
+    - region=ap-northeast-2
+  csi:
+    driver: s3.csi.aws.com
+    volumeHandle: s3-csi-driver-volume
+    volumeAttributes:
+      bucketName: stockcity-s3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: s3-claim
+  namespace: stock-city
+spec:
+  accessModes:
+    - ReadWriteMany 
+  storageClassName: "" 
+  resources:
+    requests:
+      storage: 50Gi 
+  volumeName: s3-pv
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: s3-csi-node-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: s3-csi-node-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: s3-csi-driver-sa
+  namespace: stock-city
+roleRef:
+  kind: ClusterRole
+  name: s3-csi-node-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+
