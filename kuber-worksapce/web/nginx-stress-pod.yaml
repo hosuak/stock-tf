@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-stress-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  - name: stress
+    image: apachefriends/siege
+    command: ["siege", "-c", "10", "-t", "30s", "http://www.itbank08.link"]

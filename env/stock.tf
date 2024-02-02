@@ -38,7 +38,7 @@ module "eks" {
   version = "~> 19.0"
 
   # EKS Cluster Setting
-  cluster_name    = "${var.initial}eks"
+  cluster_name    = "${var.namespace}-eks"
   cluster_version = "1.28"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
@@ -48,8 +48,8 @@ module "eks" {
 
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
-    "${var.initial}worker" = {
-      instance_types         = ["t3.small"]
+    "${var.namespace}-worker" = {
+      instance_types         = ["t3.medium"]
       min_size               = 2
       max_size               = 4
       desired_size           = 2
@@ -172,7 +172,7 @@ resource "kubernetes_namespace" "namespace" {
   metadata {
     name = var.namespace
   }
-  depends_on = [module.eks.eks_managed_node_groups]
+
 }
 
 module "sa_role_policy_ebs" {
@@ -193,6 +193,17 @@ module "sa_role_policy_s3" {
   role_name   = "${var.initial}AmazonEKS_S3_CSI_DriverRole"
   namespace   = var.namespace
   sa_name     = "aws-mountpoint-s3-csi-sa"
+
+  cluster_oidc_issuer_url = local.oidc_url
+  depends_on              = [resource.kubernetes_namespace.namespace]
+}
+module "sa_role_policy_efs" {
+  source = "../serviceAccount"
+
+  policy_name = "AmazonEFSCSIDriverPolicy"
+  role_name   = "${var.initial}AmazonEKS_EFS_CSI_DriverRole"
+  namespace   = var.namespace
+  sa_name     = "efs-csi-controller-sa"
 
   cluster_oidc_issuer_url = local.oidc_url
   depends_on              = [resource.kubernetes_namespace.namespace]
@@ -219,21 +230,6 @@ module "sa_role_policy_lb" {
   cluster_oidc_issuer_url = local.oidc_url
   depends_on              = [resource.kubernetes_namespace.namespace]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

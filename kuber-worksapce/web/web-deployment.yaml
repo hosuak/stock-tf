@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: web-app
-        image: 477159410287.dkr.ecr.ap-northeast-2.amazonaws.com/itbank08:98
+        image: 477159410287.dkr.ecr.ap-northeast-2.amazonaws.com/itbank08:dh-test
         ports:
         - containerPort: 80
         resources:

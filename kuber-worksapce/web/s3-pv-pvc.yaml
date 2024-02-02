@@ -4,14 +4,14 @@ metadata:
   name: s3-pv
 spec:
   capacity:
-    storage: 50Gi # ignored, required
+    storage: 50Gi
   accessModes:
-    - ReadWriteMany # supported options: ReadWriteMany / ReadOnlyMany
+    - ReadWriteMany
   mountOptions:
     - allow-delete
     - region=ap-northeast-2
   csi:
-    driver: s3.csi.aws.com # required
+    driver: s3.csi.aws.com
     volumeHandle: s3-csi-driver-volume
     volumeAttributes:
       bucketName: stockcity-s3
