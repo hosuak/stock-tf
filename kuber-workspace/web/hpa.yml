@@ -1,0 +1,65 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-hpa
+  namespace: stock-city
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-deploy
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  # - type: Resource
+  #   resource:
+  #     name: memory
+  #     target:
+  #       type: Utilization
+  #       averageUtilization: 50
+# AWS DOCS : https://docs.aws.amazon.com/eks/latest/userguide/metrics-server.html
+# $ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# $ kubectl top node
+# NAME                                              CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+# ip-172-28-1-136.ap-northeast-2.compute.internal   31m          1%     828Mi           57%       
+# ip-172-28-3-244.ap-northeast-2.compute.internal   31m          1%     688Mi           47%  
+
+# $ kubectl apply -f ~/kuber-workspace/autoscaling/hpa.yml 
+# horizontalpodautoscaler.autoscaling/my-hpa created
+
+# $ kubectl get hpa -n delivery
+# NAME     REFERENCE               TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+# my-hpa   Deployment/web-deploy   0%/10%    1         5         2          56s
+
+# $ kubectl top pod -n delivery
+# NAME                         CPU(cores)   MEMORY(bytes)   
+# web-deploy-77b66d58f-gtsg2   4m           158Mi           
+# web-deploy-77b66d58f-qpmbh   2m           180Mi           
+
+# [1번 터미널]
+# $ while true; do kubectl top pod -n delivery; sleep 10; done
+# NAME                         CPU(cores)   MEMORY(bytes)   
+# web-deploy-77b66d58f-gtsg2   2m           159Mi           
+# web-deploy-77b66d58f-qpmbh   2m           180Mi    
+
+# [2번 터미널]
+# $ while true; do kubectl get hpa -n delivery; sleep 10; done
+# NAME     REFERENCE               TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+# my-hpa   Deployment/web-deploy   0%/10%    1         5         2          4m56s
+# NAME     REFERENCE               TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+# my-hpa   Deployment/web-deploy   0%/10%    1         5         2          5m7s
+
+# [3번 터미널]
+# $ kubectl get pod -n delivery
+# NAME                         READY   STATUS    RESTARTS   AGE
+# web-deploy-77b66d58f-qpmbh   1/1     Running   0          4h26m
+
+# $ kubectl exec web-deploy-77b66d58f-qpmbh -n delivery -it -- bash
+# root@web-deploy-77b66d58f-qpmbh:/# while true; do wget -q -O - localhost > /dev/null; done

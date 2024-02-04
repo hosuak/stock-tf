@@ -35,7 +35,6 @@ data "aws_iam_policy_document" "service_account_assume_role" {
         "system:serviceaccount:${var.namespace}:${var.sa_name}"
       ]
     }
-
   }
 }
 

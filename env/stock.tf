@@ -44,7 +44,7 @@ module "eks" {
   subnet_ids      = module.vpc.private_subnets
 
   # OIDC(OpenID Connect) 구성 
-  enable_irsa = true # default = true 이다.
+  enable_irsa = true
 
   # EKS Worker Node 정의 ( ManagedNode방식 / Launch Template 자동 구성 )
   eks_managed_node_groups = {
@@ -55,8 +55,7 @@ module "eks" {
       desired_size           = 2
       vpc_security_group_ids = [module.add_node_sg.security_group_id]
       iam_role_additional_policies = {
-        AmazonS3FullAccess           = "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-        # AmazonEBSCSIDriverPolicy     = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        AmazonS3FullAccess           = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
       }
     }
   }
@@ -137,6 +136,8 @@ module "add_node_sg" {
     }
   ]
 }
+
+
 // Private Subnet Tag ( AWS Load Balancer Controller Tag / internal )
 resource "aws_ec2_tag" "private_subnet_tag1" {
   resource_id = module.vpc.private_subnets[0]
@@ -230,6 +231,78 @@ module "sa_role_policy_lb" {
   depends_on              = [resource.kubernetes_namespace.namespace]
 }
 
+# module "db" {
+#   source = "terraform-aws-modules/rds/aws"
+
+#   create_db_instance = false
+
+#   identifier = "stock-city"
+
+#   engine            = "mariadb"
+#   engine_version    = "10.6.16"
+#   instance_class    = "db.t3a.large"
+#   allocated_storage = 5
+
+#   db_name  = "demo"
+#   username = "admin"
+#   port     = "3306"
+
+#   iam_database_authentication_enabled = true
+
+#   vpc_security_group_ids = ["${module.add_node_sg.security_group_id}"]
+
+#   # maintenance_window = "Mon:00:00-Mon:03:00"
+#   # backup_window      = "03:00-06:00"
+
+#   # Enhanced Monitoring - see example for details on how to create the role
+#   # by yourself, in case you don't want to create it automatically
+#   monitoring_interval    = "30"
+#   monitoring_role_name   = "MyRDSMonitoringRole"
+#   create_monitoring_role = true
+
+#   tags = {
+#     Owner       = "user"
+#     Environment = "dev"
+#   }
+
+#   # DB subnet group
+#   create_db_subnet_group = true
+#   subnet_ids             = ["${module.vpc.private_subnets[0]}", "${module.vpc.private_subnets[1]}"]
+
+#   # DB parameter group
+#   family = "mariadb10.6.16" # 이 부분을 MariaDB 버전에 맞게 수정하세요.
+
+#   # Database Deletion Protection
+#   deletion_protection = false
+
+#   parameters = [
+#     {
+#       name  = "character_set_client"
+#       value = "utf8mb4"
+#     },
+#     {
+#       name  = "character_set_server"
+#       value = "utf8mb4"
+#     }
+#   ]
+
+#   options = [
+#     {
+#       option_name = "MARIADB_AUDIT_PLUGIN"
+
+#       option_settings = [
+#         {
+#           name  = "SERVER_AUDIT_EVENTS"
+#           value = "CONNECT"
+#         },
+#         {
+#           name  = "SERVER_AUDIT_FILE_ROTATIONS"
+#           value = "37"
+#         },
+#       ]
+#     },
+#   ]
+# }
 
 
 

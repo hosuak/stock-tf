@@ -7,7 +7,7 @@ metadata:
     project: stock-city
   namespace: stock-city
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: web-app
@@ -21,17 +21,57 @@ spec:
       labels:
         app: web-app
     spec:
-      securityContext:
-        runAsUser: 1000
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - web-app
+              topologyKey: "kubernetes.io/hostname"
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone # 2. 노드의 가용영역을 기준으로 Pod를 분산하고,
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: web-app  # 1.app: web-app 라는 Label을 가진 pod가 실행 될 때
+      serviceAccountName: aws-mountpoint-s3-csi-sa
       containers:
       - name: web-app
-        image: 477159410287.dkr.ecr.ap-northeast-2.amazonaws.com/itbank08:dh-test
+        image: 477159410287.dkr.ecr.ap-northeast-2.amazonaws.com/itbank08:stock-fin
         ports:
         - containerPort: 80
         resources:
           limits:
             memory: "500Mi"
             cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 5
+        readinessProbe:
+        #   exec:
+        #     command:
+        #       - ls
+        #       - /mountPoint
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 3
+        #   successThreshold: 1
+        #   failureThreshold: 3
+        #   timeoutSeconds: 5
         volumeMounts:
         - name: persistent-storage
           mountPath: /mountPoint
@@ -39,3 +79,7 @@ spec:
       - name: persistent-storage
         persistentVolumeClaim:
           claimName: s3-claim
+
+
+# kubectl logs liveness-probe
+# kubectl get pod readsiness-probe

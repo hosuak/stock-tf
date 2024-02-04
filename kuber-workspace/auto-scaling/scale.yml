@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scale-deploy
+  namespace: delivery
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: scale-app
+  template:
+    metadata:
+      labels:
+        app: scale-app
+    spec:
+      containers:
+      - name: scale-pod
+        image: kys8502/springboot-terraform:latest
+        resources:
+          limits:
+            memory: 500Mi
+            cpu: 1000m
+          requests:
+            memory: 500Mi
+            cpu: 1000m
+
+# $ kubectl apply -f kuber-workspace/autoscaling/scale.yml 
+# deployment.apps/scale-deploy created
+
+# $ kubectl get pod -n delivery
+# NAME                            READY   STATUS    RESTARTS   AGE
+# scale-deploy-857f96bdfc-m8z8j   0/1     Pending   0          13s
+# scale-deploy-857f96bdfc-wvmc2   1/1     Running   0          13s
+# scale-deploy-857f96bdfc-wzjbc   1/1     Running   0          13s
+
+# $ kubectl get node
+# NAME                                              STATUS   ROLES    AGE     VERSION
+# ip-172-28-1-136.ap-northeast-2.compute.internal   Ready    <none>   6h23m   v1.28.3-eks-e71965b
+# ip-172-28-3-244.ap-northeast-2.compute.internal   Ready    <none>   6h23m   v1.28.3-eks-e71965b

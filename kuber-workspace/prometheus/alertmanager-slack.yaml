@@ -1,0 +1,23 @@
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/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'
+    route:
+      group_by: ['job']  # namespace
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 5m
+      receiver: 'slack-notifications'
+      routes:
+      - receiver: 'slack-notifications'
+        matchers:
+          - alertname =~ "InfoInhibitor|Watchdog"
+    receivers:
+    - name: 'slack-notifications'
+      slack_configs:
+      - channel: '#prometheus_notification'
+        send_resolved: true
+        title: '[{{.Status | toUpper}}] {{ .CommonLabels.alertname }}'
+        text: |
+          *Description:* {{ .CommonAnnotations.description }}

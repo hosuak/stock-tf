@@ -11,3 +11,4 @@ output "oidc_url" {
   value       = module.eks.oidc_provider_arn
 }
 
+
