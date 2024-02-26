@@ -40,8 +40,12 @@ output "vpc_cidr_block" {
 # Nat_instance
 ################################################################################
 output "nat_bastion" {
-  description = "nat_bastion is Nat_instance include Bastion Host"
-   value = {
+  description = "Nat_bastion"
+  value = {
     public_ip = aws_instance.nat_instance[*].public_ip
   }
+}
+output "bastion" {
+  description = "Bastion Host"
+  value       = { public_ip = aws_instance.bastion.public_ip }
 }

@@ -345,10 +345,15 @@ variable "key_name" {
 ################################################################################
 # Bastion Instance
 ################################################################################
+variable "bastion_name" {
+  description = "AMI ID for Bastion instances"
+  type        = string
+  default     = "Bastion-Host"
+}
 variable "bastion_ami" {
   description = "AMI ID for Bastion instances"
   type        = string
-  default     = "ami-0bc4327f3aabf5b71"
+  default     = "ami-097bf0ec147165215"
 }
 variable "bastion_instance_type" {
   description = "Instance type for Bastion instances"
